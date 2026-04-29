@@ -2,12 +2,13 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 //Dimensioni finestra
 const int SCREEN_WIDTH = 400;
 const int SCREEN_HEIGHT = 600;
 
-#define T_SIZE 30
+#define T_SIZE 30 //numero di pixel che occupa un blocco
 
 //funzione che disegna la griglia con i pezzi fissi
 void draw_board(SDL_Renderer* renderer, game_state* game){
