@@ -56,6 +56,7 @@ void draw_active_piece(SDL_Renderer* renderer, game_state* game){
 
 
 int main(int argc, char* args[]){
+    srand((unsigned int)time(NULL)); //serve a non generare sempre la stessa sequenza a ogni esecuzione
 
     //test per vedere se il terminale stampa correttamente
     game_state game;
@@ -64,8 +65,8 @@ int main(int argc, char* args[]){
     printf("il gioco esiste e il punteggio iniziale è: %d\n", game.score);
 
     //test di prova stampa blocco
-    game.board[10][5] = 1;
-    game.board[19][0] = 1;
+    //game.board[10][5] = 1;
+    //game.board[19][0] = 1;
 
     //inizializzazione di SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0){

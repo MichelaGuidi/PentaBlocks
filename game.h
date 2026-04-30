@@ -32,5 +32,6 @@ typedef struct{
 extern const Piece PIECES[NUM_PIECES];
 
 void init_game(game_state *game);
+void spawn_piece(game_state *game);
 
 #endif

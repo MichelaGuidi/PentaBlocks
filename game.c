@@ -1,4 +1,5 @@
 #include "game.h"
+#include <stdlib.h>
 
 //definizione figure (tutte da 5 quadtratini)
 const Piece PIECES[NUM_PIECES] = {
@@ -24,9 +25,19 @@ void init_game(game_state *game){
         }
     }
     game->score = 0;
+    spawn_piece(game);
 
     //inizializzazione primo pezzo
-    game->active_piece = PIECES[0];
-    game->active_x = 3;
+    //game->active_piece = PIECES[0];
+    //game->active_x = 3;
+    //game->active_y = 0;
+}
+
+//questa funzione serve a far comparire un pezzo e farlo comparire in alto e al centro
+void spawn_piece(game_state* game){
+    int piece_index = rand() % NUM_PIECES; //sceglie numero casuale da 0 a 11
+
+    game->active_piece = PIECES[piece_index];
+    game->active_x = COLS/2 - 2;
     game->active_y = 0;
 }
