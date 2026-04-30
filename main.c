@@ -65,7 +65,7 @@ int main(int argc, char* args[]){
     printf("il gioco esiste e il punteggio iniziale è: %d\n", game.score);
 
     //test di prova stampa blocco
-    //game.board[10][5] = 1;
+    game.board[10][5] = 1;
     //game.board[19][0] = 1;
 
     //inizializzazione di SDL
@@ -97,7 +97,16 @@ int main(int argc, char* args[]){
                 quit = true;
             } else if(e.type == SDL_KEYDOWN){ 
                 if (e.key.keysym.sym == SDLK_ESCAPE) quit = true; //se premi ESC per uscire
-            }
+            } else if (e.key.keysym.sym == SDLK_LEFT){ //se viene premuta la freccia a sinistra, controlla la collisione e poi sposta il pezzo
+                if (can_place(&game, game.active_piece, game.active_x - 1, game.active_y))
+                    game.active_x--;
+            } else if(e.key.keysym.sym == SDLK_RIGHT){ //stessa cosa nel caso in cui viene premuta quella a destra
+                if (can_place(&game, game.active_piece, game.active_x + 1, game.active_y))
+                    game.active_x++;
+            } else if(e.key.keysym.sym == SDLK_DOWN){ //stessa cosa nel caso in cui viene premuta la freccia verso il bassso
+                if (can_place(&game, game.active_piece, game.active_x, game.active_y + 1))
+                    game.active_y++;
+            } 
         }
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //colore nero
         SDL_RenderClear(renderer); //cancella lo schermo con il colore nero

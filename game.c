@@ -1,5 +1,6 @@
 #include "game.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 //definizione figure (tutte da 5 quadtratini)
 const Piece PIECES[NUM_PIECES] = {
@@ -40,4 +41,22 @@ void spawn_piece(game_state* game){
     game->active_piece = PIECES[piece_index];
     game->active_x = COLS/2 - 2;
     game->active_y = 0;
+}
+
+//funzione booleana serve per capire se un pezzo è fuori dal campo o se entra in collisione con blocchi fissi
+bool can_place(const game_state* game, Piece piece, int x, int y){
+    //effettua il controllo per ogni quadratino del pezzo
+    for (int i = 0; i < BLOCKS_PER_PIECE; i++){
+        int nx = x + piece.shape[i].dx;
+        int ny = y + piece.shape[i].dy;
+
+        if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS){
+            return false;
+        }
+
+        if (game->board[ny][nx] != 0){
+            return false;
+        }
+    }
+    return true;
 }

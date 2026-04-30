@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 #include <stdint.h>
+#include <stdbool.h>
 
 #define ROWS 20
 #define COLS 10
@@ -33,5 +34,6 @@ extern const Piece PIECES[NUM_PIECES];
 
 void init_game(game_state *game);
 void spawn_piece(game_state *game);
+bool can_place(const game_state* game, Piece piece, int x, int y);
 
 #endif
