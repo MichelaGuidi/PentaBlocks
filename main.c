@@ -106,7 +106,11 @@ int main(int argc, char* args[]){
             } else if(e.key.keysym.sym == SDLK_DOWN){ //stessa cosa nel caso in cui viene premuta la freccia verso il bassso
                 if (can_place(&game, game.active_piece, game.active_x, game.active_y + 1))
                     game.active_y++;
-            } 
+            } else if(e.key.keysym.sym == SDLK_UP){ //se viene premuta la freccia verso l'alto, il pezzo viene ruotato secondo la funzione rotate_piece
+                Piece rotated = rotate_piece(game.active_piece);
+                if (can_place(&game, rotated, game.active_x, game.active_y))
+                    game.active_piece = rotated; //il nuovo pezzo attivo diventa quello ruotato
+            }
         }
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //colore nero
         SDL_RenderClear(renderer); //cancella lo schermo con il colore nero

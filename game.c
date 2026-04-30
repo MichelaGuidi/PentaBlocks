@@ -60,3 +60,32 @@ bool can_place(const game_state* game, Piece piece, int x, int y){
     }
     return true;
 }
+
+//questa funzione restituisce un nuovo pezzo dello stesso tipo di active_piece, ma ruotato di 90 gradi
+Piece rotate_piece(Piece piece){
+    Piece rotated;
+    rotated.color_id = piece.color_id;
+
+    //ruota un punto (x,y) di 90 gradi e quindi in (-y,x). Ripete questa cosa per gli offset di ogni quadratino
+    for (int i = 0; i < BLOCKS_PER_PIECE; i++){
+        rotated.shape[i].dx = -piece.shape[i].dy;
+        rotated.shape[i].dy = piece.shape[i].dx;
+    }
+
+    //dobbiamo controllare che non ci siano offset negativi, quindi cerchiamo i più piccoli
+    int min_dx = rotated.shape[0].dx;
+    int min_dy = rotated.shape[0].dy;
+
+    for (int i = 0; i < BLOCKS_PER_PIECE; i++){
+        if (rotated.shape[i].dx < min_dx) min_dx = rotated.shape[i].dx;
+        if (rotated.shape[i].dy < min_dy) min_dy = rotated.shape[i].dy;
+    }
+
+    //la figura viene traslata verso destra proprio per evitare offset negativi
+    for (int i = 0; i < BLOCKS_PER_PIECE; i++){
+        rotated.shape[i].dx -= min_dx;
+        rotated.shape[i].dy -= min_dy;
+    }
+
+    return rotated;
+}
