@@ -3,12 +3,14 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
 
 //Dimensioni finestra
 const int SCREEN_WIDTH = 400;
 const int SCREEN_HEIGHT = 600;
 
 #define T_SIZE 30 //numero di pixel che occupa un blocco
+#define DROP_INTERVAL 1000 //intervallo di 1000 ms (ogni quanto il pezzo scende verso il basso)
 
 //funzione che disegna la griglia con i pezzi fissi
 void draw_board(SDL_Renderer* renderer, game_state* game){
@@ -91,13 +93,15 @@ int main(int argc, char* args[]){
     bool quit = false;
     SDL_Event e;
 
+    Uint64 last_drop_time = SDL_GetTicks64();
+
     while(!quit){
         while(SDL_PollEvent(&e) != 0){ //check per vedere se ci sono stati eventi
             if (e.type == SDL_QUIT){ //se l'evento è la 'X' per chiudere la finestra
                 quit = true;
             } else if(e.type == SDL_KEYDOWN){ 
                 if (e.key.keysym.sym == SDLK_ESCAPE) quit = true; //se premi ESC per uscire
-            } else if (e.key.keysym.sym == SDLK_LEFT){ //se viene premuta la freccia a sinistra, controlla la collisione e poi sposta il pezzo
+             else if (e.key.keysym.sym == SDLK_LEFT){ //se viene premuta la freccia a sinistra, controlla la collisione e poi sposta il pezzo
                 if (can_place(&game, game.active_piece, game.active_x - 1, game.active_y))
                     game.active_x--;
             } else if(e.key.keysym.sym == SDLK_RIGHT){ //stessa cosa nel caso in cui viene premuta quella a destra
@@ -111,7 +115,17 @@ int main(int argc, char* args[]){
                 if (can_place(&game, rotated, game.active_x, game.active_y))
                     game.active_piece = rotated; //il nuovo pezzo attivo diventa quello ruotato
             }
+            }
         }
+        Uint64 current_time = SDL_GetTicks64();
+
+        if (current_time - last_drop_time >= DROP_INTERVAL){
+            if (can_place(&game, game.active_piece, game.active_x, game.active_y + 1)){
+                game.active_y++;
+            }
+            last_drop_time = current_time;
+        }
+
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //colore nero
         SDL_RenderClear(renderer); //cancella lo schermo con il colore nero
 
