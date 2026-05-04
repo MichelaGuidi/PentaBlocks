@@ -36,5 +36,6 @@ void init_game(game_state *game);
 void spawn_piece(game_state *game);
 bool can_place(const game_state* game, Piece piece, int x, int y);
 Piece rotate_piece(Piece piece);
+void lock_piece(game_state *game);
 
 #endif

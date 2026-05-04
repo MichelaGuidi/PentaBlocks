@@ -108,8 +108,12 @@ int main(int argc, char* args[]){
                 if (can_place(&game, game.active_piece, game.active_x + 1, game.active_y))
                     game.active_x++;
             } else if(e.key.keysym.sym == SDLK_DOWN){ //stessa cosa nel caso in cui viene premuta la freccia verso il bassso
-                if (can_place(&game, game.active_piece, game.active_x, game.active_y + 1))
+                if (can_place(&game, game.active_piece, game.active_x, game.active_y + 1)){
                     game.active_y++;
+                } else { //se can_place è false, allora blocca il pezzo e ne fa uscire uno nuovo
+                    lock_piece(&game);
+                    spawn_piece(&game);
+                }
             } else if(e.key.keysym.sym == SDLK_UP){ //se viene premuta la freccia verso l'alto, il pezzo viene ruotato secondo la funzione rotate_piece
                 Piece rotated = rotate_piece(game.active_piece);
                 if (can_place(&game, rotated, game.active_x, game.active_y))
@@ -122,6 +126,9 @@ int main(int argc, char* args[]){
         if (current_time - last_drop_time >= DROP_INTERVAL){
             if (can_place(&game, game.active_piece, game.active_x, game.active_y + 1)){
                 game.active_y++;
+            } else {  //se can_place è false, allora blocca il pezzo e ne fa uscire uno nuovo
+                lock_piece(&game);
+                spawn_piece(&game);
             }
             last_drop_time = current_time;
         }

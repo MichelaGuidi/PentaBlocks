@@ -89,3 +89,16 @@ Piece rotate_piece(Piece piece){
 
     return rotated;
 }
+
+//funzione che blocca un pezzo
+//per ogni quadratino, cambia il colore della board
+void lock_piece(game_state *game){
+    for (int i = 0; i < BLOCKS_PER_PIECE; i++){
+        int nx = game->active_x + game->active_piece.shape[i].dx;
+        int ny = game->active_y + game->active_piece.shape[i].dy;
+
+        if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS){
+            game->board[ny][nx] = game->active_piece.color_id; //il valore associato a board[ny][nx] diventa diverso da zero
+        }
+    }
+}
