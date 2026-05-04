@@ -67,6 +67,7 @@ void game_over(game_state* game, SDL_Window* window){
         init_game(game);
         return;
     }
+    clear_lines(game);
     spawn_piece(game);
 
     //controlla che il nuovo pezzo entri

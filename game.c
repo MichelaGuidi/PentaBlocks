@@ -112,3 +112,41 @@ bool top_row_occupied(game_state* game){
     } 
     return false;
 }
+
+//la funzione pulisce le righe piene e fa scendere le righe più in alto
+void clear_lines(game_state* game){
+    int c = 0;
+    //a partire dall'ultima riga controlla se ce n'è almeno una completamente piena
+    for (int i = ROWS - 1; i >= 0; i--){
+        bool full = true; //parte da piena
+
+        //se trova un quadratino vuoto, passa alla prossima riga
+        for (int j = 0; j < COLS; j++){
+            if (game->board[i][j] == 0){
+                full = false;
+                break;
+            }
+        }
+
+        //se trova la riga piena
+        if (full){
+            c++;
+            //sostituisce ogni riga con la riga sopra, cominciando da quella cancellata
+            for (int y = i; y > 0; y--){
+                for (int x = 0; x < COLS; x++){
+                    game->board[y][x] = game->board[y-1][x];
+                }
+            }
+
+            //la prima riga sicuramente è vuota
+            for (int x = 0; x < COLS; x++){
+                game->board[0][x] = 0;
+            }
+
+            i++; //incremento per controllora di nuovo la riga attuale, dato che nel for viene fatto i--
+        }
+    }
+    //aumenta il punteggio, ancora non utilizzato
+    game->score += c*100;
+    return;
+}

@@ -40,4 +40,5 @@ void lock_piece(game_state *game);
 
 bool top_row_occupied(game_state *game);
 
+void clear_lines(game_state* game);
 #endif
