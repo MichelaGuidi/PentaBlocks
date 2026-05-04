@@ -2,6 +2,7 @@
 #define GAME_H
 #include <stdint.h>
 #include <stdbool.h>
+#include <SDL2/SDL.h>
 
 #define ROWS 20
 #define COLS 10
@@ -17,7 +18,7 @@ typedef struct{
 //struttura di un pezzo
 typedef struct {
     Offset shape[5]; //cambiato da 4 a 5 per realizzare dei pentamini al posto dei tetramini
-    int color_id;
+    uint8_t color_id;
 } Piece;
 
 //byte_field

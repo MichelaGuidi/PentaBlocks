@@ -12,6 +12,26 @@ const int SCREEN_HEIGHT = 600;
 #define T_SIZE 30 //numero di pixel che occupa un blocco
 #define DROP_INTERVAL 1000 //intervallo di 1000 ms (ogni quanto il pezzo scende verso il basso)
 
+//funzione che modifica i colori in base ai pezzi
+//(avevo provato ad aggiungere un nuovo campo nella struct Piece, ma nel chiamare draw_board, i colori
+//assumevano tutti lo stesso colore)
+void set_piece_color(SDL_Renderer* renderer, uint8_t color_id){
+    switch (color_id){
+        case 1: SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255); break;
+        case 2: SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); break;
+        case 3: SDL_SetRenderDrawColor(renderer,160, 32, 240, 255); break;
+        case 4: SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); break;
+        case 5: SDL_SetRenderDrawColor(renderer, 255, 105, 180, 255); break;
+        case 6: SDL_SetRenderDrawColor(renderer,255, 165, 0, 255); break;
+        case 7: SDL_SetRenderDrawColor(renderer, 0, 128, 255, 255); break;
+        case 8: SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); break;
+        case 9: SDL_SetRenderDrawColor(renderer, 0, 200, 120, 255); break;
+        case 10: SDL_SetRenderDrawColor(renderer, 200, 200, 255, 255); break;
+        case 11: SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); break;
+        case 12: SDL_SetRenderDrawColor(renderer, 180, 120, 0, 255); break;
+    }
+}
+
 //funzione che disegna la griglia con i pezzi fissi
 void draw_board(SDL_Renderer* renderer, game_state* game){
     for (int i = 0; i < ROWS; i++){
@@ -25,8 +45,8 @@ void draw_board(SDL_Renderer* renderer, game_state* game){
             if (game->board[i][j] == 0){ //se la cella è vuota disegna solo il bordo grigio
                 SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255);
                 SDL_RenderDrawRect(renderer, &rect);
-            } else { //se è piena disegna un blocco rosso e il bordo nero
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+            } else { //se è piena disegna blocco dello stesso colore del pezzo e il bordo nero
+                set_piece_color(renderer, game->board[i][j]);
                 SDL_RenderFillRect(renderer, &rect); 
 
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -38,7 +58,6 @@ void draw_board(SDL_Renderer* renderer, game_state* game){
 
 //funzione che disegna un pezzo sulla griglia che dovrà muoversi
 void draw_active_piece(SDL_Renderer* renderer, game_state* game){
-    SDL_SetRenderDrawColor(renderer, 252, 0, 252, 255);
 
     for (int i = 0; i < 5; i++){
         SDL_Rect rect;
@@ -48,11 +67,12 @@ void draw_active_piece(SDL_Renderer* renderer, game_state* game){
         rect.w = T_SIZE;
         rect.h = T_SIZE;
 
+        set_piece_color(renderer, game->active_piece.color_id);
         SDL_RenderFillRect(renderer, &rect);
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderDrawRect(renderer, &rect);
-        SDL_SetRenderDrawColor(renderer, 252, 0, 252, 255);
+        //SDL_SetRenderDrawColor(renderer, 252, 0, 252, 255);
     }
 }
 
@@ -89,7 +109,7 @@ int main(int argc, char* args[]){
     printf("il gioco esiste e il punteggio iniziale è: %d\n", game.score);
 
     //test di prova stampa blocco
-    game.board[10][5] = 1;
+    //game.board[10][5] = 1;
     //game.board[19][0] = 1;
 
     //inizializzazione di SDL
