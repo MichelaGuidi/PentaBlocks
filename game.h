@@ -38,4 +38,6 @@ bool can_place(const game_state* game, Piece piece, int x, int y);
 Piece rotate_piece(Piece piece);
 void lock_piece(game_state *game);
 
+bool top_row_occupied(game_state *game);
+
 #endif

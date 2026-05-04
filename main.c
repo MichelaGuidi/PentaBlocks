@@ -56,6 +56,27 @@ void draw_active_piece(SDL_Renderer* renderer, game_state* game){
     }
 }
 
+//questa funzione blocca il pezzo attuale e ne manda uno nuovo
+//controlla però che la prima riga non sia occupata o che il nuovo pezzo entri completamente
+//in caso contrario blocca la partita, mostra un messaggio e ne comincia una nuova
+void game_over(game_state* game, SDL_Window* window){
+    lock_piece(game); //blocca prima il pezzo attuale
+
+    if (top_row_occupied(game)){
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Game over", "pezzo fisso in prima riga, ricomincia", window);
+        init_game(game);
+        return;
+    }
+    spawn_piece(game);
+
+    //controlla che il nuovo pezzo entri
+    if (!can_place(game, game->active_piece, game->active_x, game->active_y)){
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Game Over", "Non c'è spazio, ricomincia", window);
+        init_game(game);
+        return;
+    }
+}
+
 
 int main(int argc, char* args[]){
     srand((unsigned int)time(NULL)); //serve a non generare sempre la stessa sequenza a ogni esecuzione
@@ -95,6 +116,7 @@ int main(int argc, char* args[]){
 
     Uint64 last_drop_time = SDL_GetTicks64();
 
+
     while(!quit){
         while(SDL_PollEvent(&e) != 0){ //check per vedere se ci sono stati eventi
             if (e.type == SDL_QUIT){ //se l'evento è la 'X' per chiudere la finestra
@@ -111,8 +133,7 @@ int main(int argc, char* args[]){
                 if (can_place(&game, game.active_piece, game.active_x, game.active_y + 1)){
                     game.active_y++;
                 } else { //se can_place è false, allora blocca il pezzo e ne fa uscire uno nuovo
-                    lock_piece(&game);
-                    spawn_piece(&game);
+                    game_over(&game, window);
                 }
             } else if(e.key.keysym.sym == SDLK_UP){ //se viene premuta la freccia verso l'alto, il pezzo viene ruotato secondo la funzione rotate_piece
                 Piece rotated = rotate_piece(game.active_piece);
@@ -127,8 +148,7 @@ int main(int argc, char* args[]){
             if (can_place(&game, game.active_piece, game.active_x, game.active_y + 1)){
                 game.active_y++;
             } else {  //se can_place è false, allora blocca il pezzo e ne fa uscire uno nuovo
-                lock_piece(&game);
-                spawn_piece(&game);
+                game_over(&game, window);
             }
             last_drop_time = current_time;
         }

@@ -102,3 +102,13 @@ void lock_piece(game_state *game){
         }
     }
 }
+
+//la funzione controlla se c'è almeno un quadratino della prima riga che ha un pezzo fisso
+bool top_row_occupied(game_state* game){
+    for (int i = 0; i < COLS; i++){
+        if (game->board[0][i] != 0){
+            return true;
+        }
+    } 
+    return false;
+}
