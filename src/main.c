@@ -11,6 +11,7 @@ const int SCREEN_HEIGHT = 600;
 
 #define T_SIZE 30 //numero di pixel che occupa un blocco
 #define DROP_INTERVAL 1000 //intervallo di 1000 ms (ogni quanto il pezzo scende verso il basso)
+#define FRAME_DELAY 16 //limite per frame impostato a 16 ms 
 
 //funzione che modifica i colori in base ai pezzi
 //(avevo provato ad aggiungere un nuovo campo nella struct Piece, ma nel chiamare draw_board, i colori
@@ -139,6 +140,8 @@ int main(int argc, char* args[]){
 
 
     while(!quit){
+        Uint64 frame_start = SDL_GetTicks64();
+
         while(SDL_PollEvent(&e) != 0){ //check per vedere se ci sono stati eventi
             if (e.type == SDL_QUIT){ //se l'evento è la 'X' per chiudere la finestra
                 quit = true;
@@ -181,6 +184,12 @@ int main(int argc, char* args[]){
         draw_active_piece(renderer, &game);
 
         SDL_RenderPresent(renderer); //mostra il risultato
+
+        Uint64 frame_time = SDL_GetTicks64() - frame_start;
+        //se il tempo passato è inferiore a FRAME_DELAY aspetto comunque che finiscano i 16ms
+        if (frame_time < FRAME_DELAY){
+            SDL_Delay((Uint32)(FRAME_DELAY - frame_time));
+        }
     }
 
     //Pulizia (chiusura e distruzione di window e renderer)
