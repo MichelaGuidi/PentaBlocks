@@ -29,6 +29,8 @@ typedef struct{
     Piece active_piece; //definiamo il pezzo che deve muoversi
     int active_x; // colonna in cui si trova (l'inizio)
     int active_y; // riga in cui si trova (l'inizio)
+
+    Piece next_piece; //prossimo pezzo che apparirà nel gioco
 } game_state;
 
 extern const Piece PIECES[NUM_PIECES];

@@ -77,6 +77,31 @@ void draw_active_piece(SDL_Renderer* renderer, game_state* game){
     }
 }
 
+//funzione che disegna il next_piece a lato
+void draw_next_piece(SDL_Renderer* renderer, game_state* game){
+    int preview_x = COLS * T_SIZE + 20; //inizio dell'area di preview a lato
+    int preview_y = 60; //altezza della preview nella finestra
+    int preview_block = 20; //blocchi più piccoli rispetto alla griglia principale
+
+    SDL_Rect box = {preview_x - 10, preview_y - 10, 90, 110}; //riquadro della preview
+    SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255); //bordo grigio del riquadro
+    SDL_RenderDrawRect(renderer, &box); //disegna il riquadro esterno
+
+    for (int i = 0; i < BLOCKS_PER_PIECE; i++){
+        SDL_Rect rect;
+        rect.x = preview_x + game->next_piece.shape[i].dx * preview_block;
+        rect.y = preview_y + game->next_piece.shape[i].dy * preview_block;
+        rect.w = preview_block; //larghezza blocco preview
+        rect.h = preview_block; //altezza blocco preview
+
+        set_piece_color(renderer, game->next_piece.color_id);
+        SDL_RenderFillRect(renderer, &rect); //riempie il blocco
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //bordo nero
+        SDL_RenderDrawRect(renderer, &rect); //disegna il contorno del blocco
+    }
+}
+
 //questa funzione blocca il pezzo attuale e ne manda uno nuovo
 //controlla però che la prima riga non sia occupata o che il nuovo pezzo entri completamente
 //in caso contrario blocca la partita, mostra un messaggio e ne comincia una nuova
@@ -182,6 +207,7 @@ int main(int argc, char* args[]){
 
         draw_board(renderer, &game);
         draw_active_piece(renderer, &game);
+        draw_next_piece(renderer, &game);
 
         SDL_RenderPresent(renderer); //mostra il risultato
 

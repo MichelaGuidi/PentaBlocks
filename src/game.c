@@ -18,6 +18,13 @@ const Piece PIECES[NUM_PIECES] = {
     {{{1,0}, {0,1}, {1,1}, {2,1}, {3,1}}, 12}, // lettera Y
 };
 
+//funzione che seglie una figura casuale. Prima rand era solo in spawn_piece
+//ma adesso serve anche per creare il 'next_piece'
+static Piece random_piece(void){
+    int piece_index = rand() % NUM_PIECES;
+    return PIECES[piece_index];
+}
+
 //funzione che inizializza e resetta il campo
 void init_game(game_state *game){
     for (int i = 0; i < ROWS; i++){
@@ -26,19 +33,19 @@ void init_game(game_state *game){
         }
     }
     game->score = 0;
-    spawn_piece(game);
 
+    //appena la partita comincia abbiamo un pezzo casuale nella griglia e uno a lato
+    game->active_piece = random_piece();
+    game->next_piece = random_piece();
+    game->active_x = COLS/2-2; //posizione iniziale orizzontale
+    game->active_y = 0; //posizione iniziale verticale
     //inizializzazione primo pezzo
-    //game->active_piece = PIECES[0];
-    //game->active_x = 3;
-    //game->active_y = 0;
 }
 
 //questa funzione serve a far comparire un pezzo e farlo comparire in alto e al centro
 void spawn_piece(game_state* game){
-    int piece_index = rand() % NUM_PIECES; //sceglie numero casuale da 0 a 11
-
-    game->active_piece = PIECES[piece_index];
+    game->active_piece = game->next_piece; //prossimo pezzo in griglia è quello mostrato a lato
+    game->next_piece = random_piece();
     game->active_x = COLS/2 - 2;
     game->active_y = 0;
 }
