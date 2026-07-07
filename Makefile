@@ -7,10 +7,10 @@ TARGET = bin/progetto
 #-g include informazioni di debug
 #-I./include dice al compilatore di cercare i file .h nella directory include
 CC = gcc
-CFLAGS = -Wall -Wextra -g -I./include $(shell pkg-config --cflags sdl2)
+CFLAGS = -std=c17 -Wall -Wextra -g -I./include $(shell pkg-config --cflags sdl2 SDL2_ttf SDL2_image)
 
 #librerie SDL2 per il linking
-LDLIBS = $(shell pkg-config --libs sdl2)
+LDLIBS = $(shell pkg-config --libs sdl2 SDL2_ttf SDL2_image)
 
 #file sorgenti
 SRCS = src/main.c src/game.c
