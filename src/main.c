@@ -18,6 +18,34 @@ const int SCREEN_HEIGHT = 640;
 #define BOARD_OFFSET_X 50
 #define BOARD_OFFSET_Y 20
 
+#define SIDEBAR_X 430
+#define SIDEBAR_Y 30
+#define SIDEBAR_W 300
+
+#define STATS_BOX_H 220
+#define NEXT_BOX_Y 280
+#define NEXT_BOX_H 250
+
+
+//funzione che modifica la grafica di un rect passato come argomento
+//grafica simile a quella della board con le cornici
+void draw_hud_box(SDL_Renderer* renderer, SDL_Rect rect) {
+    SDL_Rect glow = {rect.x - 4, rect.y - 4, rect.w + 8, rect.h + 8};
+
+    SDL_SetRenderDrawColor(renderer, 90, 140, 255, 20);
+    SDL_RenderFillRect(renderer, &glow);
+
+    SDL_SetRenderDrawColor(renderer, 10, 16, 40, 230);
+    SDL_RenderFillRect(renderer, &rect);
+
+    SDL_SetRenderDrawColor(renderer, 95, 145, 255, 255);
+    SDL_RenderDrawRect(renderer, &rect);
+
+    SDL_Rect inner = {rect.x + 2, rect.y + 2, rect.w - 4, rect.h - 4};
+    SDL_SetRenderDrawColor(renderer, 150, 80, 220, 70);
+    SDL_RenderDrawRect(renderer, &inner);
+}
+
 //funzione che scrive una stringa a schermo
 void draw_text(SDL_Renderer* renderer, TTF_Font* font, const char* text, int x, int y, SDL_Color color){
     //crea una surface contenente il testo renderizzato con il font scelto
@@ -46,40 +74,73 @@ void draw_text(SDL_Renderer* renderer, TTF_Font* font, const char* text, int x, 
     SDL_DestroyTexture(texture);
 }
 
-void draw_score(SDL_Renderer* renderer, TTF_Font* font, game_state* game){
-    char score_text[64];
-    //costruisce una stringa contenente il punteggio corrente
-    snprintf(score_text, sizeof(score_text), "Score: %d", game->score);
+//funzione che scrive il punteggio
+void draw_score(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, game_state* game){
+    SDL_Color title = {180, 210, 255, 255};
+    SDL_Color white = {245, 245, 255, 255};
+    SDL_Color pink = {255, 130, 220, 255};
+    SDL_Color cyan = {90, 220, 255, 255};
 
-    SDL_Color white = {255, 255, 255, 255};
-    //disegna il testo nella zona laterale destra della finestra
-    draw_text(renderer, font, score_text, COLS*T_SIZE + 120, 30, white);
+    char score_text[32];
+    //costruisce una stringa contenente il punteggio corrente
+    snprintf(score_text, sizeof(score_text), "%d", game->score);
+
+    draw_text(renderer, font1, "PUNTEGGIO", SIDEBAR_X + 28, SIDEBAR_Y + 22, title);
+    draw_text(renderer, font2, score_text, SIDEBAR_X + 28, SIDEBAR_Y + 65, white);
+
+    SDL_SetRenderDrawColor(renderer, 170, 70, 220, 120);
+    SDL_RenderDrawLine(renderer, SIDEBAR_X + 20, SIDEBAR_Y + 135, SIDEBAR_X + SIDEBAR_W - 20, SIDEBAR_Y + 135);
+
+    draw_text(renderer, font1, "LIVELLO", SIDEBAR_X + 28, SIDEBAR_Y + 150, pink);
+    draw_text(renderer, font1, "01", SIDEBAR_X + SIDEBAR_W - 55, SIDEBAR_Y + 150, pink);
+
+    SDL_SetRenderDrawColor(renderer, 170, 70, 220, 90);
+    SDL_RenderDrawLine(renderer, SIDEBAR_X + 20, SIDEBAR_Y + 178, SIDEBAR_X + SIDEBAR_W - 20, SIDEBAR_Y + 178);
+
+    draw_text(renderer, font1, "LINEE", SIDEBAR_X + 28, SIDEBAR_Y + 185, cyan);
+    draw_text(renderer, font1, "00", SIDEBAR_X + SIDEBAR_W - 55, SIDEBAR_Y + 185, cyan);
 }
 
 //funzione che disegna bordo della griglia
 void draw_board_frame(SDL_Renderer* renderer){
-    SDL_Rect frame = {BOARD_OFFSET_X - 2, BOARD_OFFSET_Y - 2, COLS*T_SIZE + 4, ROWS* T_SIZE + 4};
+    //simula un effetto glow sulla cornice della board
+    SDL_Rect glow1 = {BOARD_OFFSET_X - 14, BOARD_OFFSET_Y - 14, COLS * T_SIZE + 28, ROWS * T_SIZE + 28};
 
-    //bordo esterno luminoso
-    SDL_SetRenderDrawColor(renderer, 80, 140, 255, 255);
-    SDL_RenderDrawRect(renderer, &frame);
+    SDL_Rect glow2 = {BOARD_OFFSET_X - 18, BOARD_OFFSET_Y - 18, COLS * T_SIZE + 36, ROWS * T_SIZE + 36};
 
-    //secondo bordo interno per dare più spessore
-    //SDL_Rect inner =  {BOARD_OFFSET_X - 5, BOARD_OFFSET_Y - 5, COLS* T_SIZE + 6, ROWS*T_SIZE+6};
-    //SDL_SetRenderDrawColor(renderer, 40, 80, 180, 255);
-    //SDL_RenderDrawRect(renderer, &inner);
+    SDL_SetRenderDrawColor(renderer, 90, 140, 255, 35);
+    SDL_RenderFillRect(renderer, &glow1);
+
+    SDL_SetRenderDrawColor(renderer, 180, 70, 255, 20);
+    SDL_RenderFillRect(renderer, &glow2);
+
+    SDL_Rect outer = {BOARD_OFFSET_X - 10, BOARD_OFFSET_Y - 10, COLS*T_SIZE + 20, ROWS* T_SIZE + 20};
+    SDL_Rect inner = {BOARD_OFFSET_X - 4, BOARD_OFFSET_Y - 4, COLS*T_SIZE + 8, ROWS* T_SIZE + 8};
+    
+    //pannello scuro dietro la board
+    SDL_SetRenderDrawColor(renderer, 8, 14, 36, 255);
+    SDL_RenderFillRect(renderer, &outer);
+
+    //bordo esterno freddo
+    SDL_SetRenderDrawColor(renderer, 95, 145, 255, 255);
+    SDL_RenderDrawRect(renderer, &outer);
+
+    //bordo interno viola
+    SDL_SetRenderDrawColor(renderer, 150, 80, 220, 110);
+    SDL_RenderDrawRect(renderer, &inner);
+
+    SDL_Rect base_glow ={ BOARD_OFFSET_X - 6, BOARD_OFFSET_Y + ROWS*T_SIZE +6, COLS* T_SIZE+12, 8};
+    SDL_SetRenderDrawColor(renderer, 120, 50, 220, 70);
+    SDL_RenderFillRect(renderer, &base_glow);
 }
 
+//disegna due box a destra della board (modificata rispetto a prima perché aveva solo un riquadro)
 void draw_sidebar(SDL_Renderer* renderer){
-    SDL_Rect panel = {COLS* T_SIZE + 100, 18, SCREEN_WIDTH - (COLS*T_SIZE + 200), SCREEN_HEIGHT - 200};
+    SDL_Rect stats_box = {SIDEBAR_X, SIDEBAR_Y, SIDEBAR_W, STATS_BOX_H};
+    SDL_Rect next_box = {SIDEBAR_X, NEXT_BOX_Y, SIDEBAR_W, NEXT_BOX_H};
 
-    //riempimento pannello
-    SDL_SetRenderDrawColor(renderer, 12, 18, 45, 255);
-    SDL_RenderFillRect(renderer, &panel);
-
-    //bordo del pannello
-    SDL_SetRenderDrawColor(renderer, 90, 120, 220, 255);
-    SDL_RenderDrawRect(renderer, &panel);
+    draw_hud_box(renderer, stats_box);
+    draw_hud_box(renderer, next_box);
 }
 
 //nuova funzione per colorare i pezzi
@@ -152,8 +213,11 @@ void draw_board(SDL_Renderer* renderer, game_state* game){
             rect.w = T_SIZE; //larghezza del quadratino
             rect.h = T_SIZE; //altezza del quadratino
 
-            if (game->board[i][j] == 0){ //se la cella è vuota disegna solo il bordo grigio
-                SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255);
+            if (game->board[i][j] == 0){ //se la cella è vuota la colora di un blu scuro e aggiunge un bordo
+                SDL_SetRenderDrawColor(renderer, 10, 16, 40, 110);
+                SDL_RenderFillRect(renderer, &rect);
+
+                SDL_SetRenderDrawColor(renderer, 40, 65, 110, 120);
                 SDL_RenderDrawRect(renderer, &rect);
             } else { //se è piena disegna blocco dello stesso colore del pezzo
                 draw_block_3d(renderer, rect, game->board[i][j], 0);
@@ -178,15 +242,33 @@ void draw_active_piece(SDL_Renderer* renderer, game_state* game){
     }
 }
 
+//funzione che disegna la cornice interna della preview
+void draw_preview_frame(SDL_Renderer* renderer){
+    SDL_Rect preview = {SIDEBAR_X + 35, NEXT_BOX_Y + 55, 230, 140};
+
+    SDL_SetRenderDrawColor(renderer, 8, 12, 30, 235);
+    SDL_RenderFillRect(renderer, &preview);
+
+    SDL_SetRenderDrawColor(renderer, 80, 110, 200, 255);
+    SDL_RenderDrawRect(renderer, &preview);
+
+    SDL_Rect inner = {preview.x + 2, preview.y + 2, preview.w - 4, preview.h - 4};
+    SDL_SetRenderDrawColor(renderer, 150, 80, 220, 60);
+    SDL_RenderDrawRect(renderer, &inner);
+}
+
+//funzione che disegna il contenuto del pannello della preview
+void draw_next_panel(SDL_Renderer* renderer, TTF_Font* font1){
+    SDL_Color title_color = {180, 210, 255, 255};
+    draw_text(renderer, font1, "PROSSIMO PEZZO", SIDEBAR_X + 28, NEXT_BOX_Y + 18, title_color);
+    draw_preview_frame(renderer);
+}
+
 //funzione che disegna il next_piece a lato
 void draw_next_piece(SDL_Renderer* renderer, game_state* game){
-    int preview_x = COLS * T_SIZE + 120; //inizio dell'area di preview a lato
-    int preview_y = 300; //altezza della preview nella finestra
-    int preview_block = 18; //blocchi più piccoli rispetto alla griglia principale
-
-    SDL_Rect box = {preview_x - 10, preview_y - 10, 110, 110}; //riquadro della preview
-    SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255); //bordo grigio del riquadro
-    SDL_RenderDrawRect(renderer, &box); //disegna il riquadro esterno
+    int preview_x = SIDEBAR_X + 95; //inizio dell'area di preview a lato
+    int preview_y = NEXT_BOX_Y + 85; //altezza della preview nella finestra
+    int preview_block = 24; //blocchi più piccoli rispetto alla griglia principale
 
     for (int i = 0; i < BLOCKS_PER_PIECE; i++){
         SDL_Rect rect;
@@ -268,10 +350,13 @@ int main(int argc, char* args[]){
     SDL_Texture* bg_texture = IMG_LoadTexture(renderer, "bg-neon.png");
 
 
-    //caricamento del font, 24 è la dimensione del testo
-    TTF_Font* font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
+    //caricamento del font, 20 è la dimensione del testo
+    TTF_Font* font1 = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20);
+
+    //aggiunta di un secondo font più grande per segnare il punteggio
+    TTF_Font* font2 = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 42);
     //se non viene trovato, chiudo il programma
-    if (font == NULL){
+    if (font1 == NULL ||font2 == NULL){
         printf("Errore caricamento font: %s\n", TTF_GetError());
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
@@ -337,8 +422,9 @@ int main(int argc, char* args[]){
         draw_board(renderer, &game);
         draw_active_piece(renderer, &game);
         draw_sidebar(renderer);
+        draw_next_panel(renderer, font1);
         draw_next_piece(renderer, &game);
-        draw_score(renderer, font, &game);
+        draw_score(renderer, font1, font2, &game);
 
 
         SDL_RenderPresent(renderer); //mostra il risultato
@@ -351,7 +437,8 @@ int main(int argc, char* args[]){
     }
 
     //Pulizia (chiusura e distruzione di window e renderer)
-    TTF_CloseFont(font);
+    TTF_CloseFont(font1);
+    TTF_CloseFont(font2);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     TTF_Quit();
