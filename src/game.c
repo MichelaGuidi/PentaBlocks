@@ -33,6 +33,13 @@ void init_game(game_state *game){
         }
     }
     game->score = 0;
+    game->level = 1;
+    game->lines_cleared = 0;
+    game->next_level_lines = 2;
+    game->next_level_score = 200;
+    game->level_complete = false;
+
+    game->game_over_screen = false;
 
     //appena la partita comincia abbiamo un pezzo casuale nella griglia e uno a lato
     game->active_piece = random_piece();
@@ -155,5 +162,33 @@ void clear_lines(game_state* game){
     }
     //aumenta il punteggio, ancora non utilizzato
     game->score += c*100;
+    game->lines_cleared += c;
+    update_level(game);
     return;
+}
+
+//questa funzione aggiorna il livello e aumenta la soglia di righe complete e punteggio
+//per passare al prossimo livello
+void update_level(game_state* game){
+    while(game->lines_cleared >= game->next_level_lines || game->score >= game->next_level_score){
+        game->level++;
+        game->next_level_lines +=2;
+        game->next_level_score += 200;
+        game->level_complete = true;
+    }
+}
+
+//cominciando una nuova partita, il livello resta quello aumentato, come anche le soglie
+//mentre il resto viene riportato allo stato iniziale
+void start_next_level(game_state* game){
+    for (int i = 0; i < ROWS; i++){
+        for (int j = 0; j < COLS; j++){
+            game->board[i][j] = 0;
+        }
+    }
+
+    game->score = 0;
+    game->lines_cleared = 0;
+    game->level_complete = false;
+    spawn_piece(game);
 }

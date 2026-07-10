@@ -89,8 +89,12 @@ void draw_score(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, game_s
     SDL_Color cyan = {90, 220, 255, 255};
 
     char score_text[32];
+    char level_text[16];
+    char lines_text[16];
     //costruisce una stringa contenente il punteggio corrente
     snprintf(score_text, sizeof(score_text), "%d", game->score);
+    snprintf(level_text, sizeof(level_text), "%02d", game->level);
+    snprintf(lines_text, sizeof(lines_text), "%02d", game->lines_cleared);
 
     draw_text(renderer, font1, "PUNTEGGIO", SIDEBAR_X + 28, SIDEBAR_Y + 22, title);
     draw_text(renderer, font2, score_text, SIDEBAR_X + 28, SIDEBAR_Y + 65, white);
@@ -99,13 +103,13 @@ void draw_score(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, game_s
     SDL_RenderDrawLine(renderer, SIDEBAR_X + 20, SIDEBAR_Y + 135, SIDEBAR_X + SIDEBAR_W - 20, SIDEBAR_Y + 135);
 
     draw_text(renderer, font1, "LIVELLO", SIDEBAR_X + 28, SIDEBAR_Y + 150, pink);
-    draw_text(renderer, font1, "01", SIDEBAR_X + SIDEBAR_W - 55, SIDEBAR_Y + 150, pink);
+    draw_text(renderer, font1, level_text, SIDEBAR_X + SIDEBAR_W - 55, SIDEBAR_Y + 150, pink);
 
     SDL_SetRenderDrawColor(renderer, 170, 70, 220, 90);
     SDL_RenderDrawLine(renderer, SIDEBAR_X + 20, SIDEBAR_Y + 178, SIDEBAR_X + SIDEBAR_W - 20, SIDEBAR_Y + 178);
 
     draw_text(renderer, font1, "LINEE", SIDEBAR_X + 28, SIDEBAR_Y + 185, cyan);
-    draw_text(renderer, font1, "00", SIDEBAR_X + SIDEBAR_W - 55, SIDEBAR_Y + 185, cyan);
+    draw_text(renderer, font1, lines_text, SIDEBAR_X + SIDEBAR_W - 55, SIDEBAR_Y + 185, cyan);
 }
 
 //funzione che disegna bordo della griglia
@@ -357,15 +361,63 @@ void draw_pause_menu(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, i
     draw_text(renderer, quit_active ? font2 : font1, "Esci", box.x + 90, box.y + 195, quit_active? active : normal);
 }
 
+//funzione che disegna il pannello di game_over (simile a quello di menu)
+void draw_game_over(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, int selected, int hovered){
+    SDL_Rect box = {SCREEN_WIDTH/2 -170, SCREEN_HEIGHT/2 - 140, 360, 280}; //box che contiene il menu
+    SDL_SetRenderDrawColor(renderer, 10, 16, 40, 240);
+    SDL_RenderFillRect(renderer, &box);
+
+    //bordo esterno del menù
+    SDL_SetRenderDrawColor(renderer, 95, 145, 255, 255);
+    SDL_RenderDrawRect(renderer, &box);
+
+    //bordo interno per restare in tema con il gioco
+    SDL_Rect inner = {box.x + 2, box.y + 2, box.w - 4, box.h - 4};
+    SDL_SetRenderDrawColor(renderer, 150, 80, 220, 90);
+    SDL_RenderDrawRect(renderer, &inner);
+
+    //colori necessari
+    SDL_Color title = {245, 245, 255, 255};
+    SDL_Color normal = {180, 210, 255, 255};
+    SDL_Color active = {255, 130, 220, 255};
+
+    draw_text(renderer, font2, "HAI PERSO!", box.x + 50, box.y + 28, title);
+
+    //rettangoli cliccabili, necessari per capire se il cursore è sopra
+    SDL_Rect restart_rect = {box.x + 50, box.y + 140, 200, 50}; 
+    SDL_Rect quit_rect = {box.x + 50, box.y + 190, 200, 50};
+
+    //posizione attuale del mouse
+    int mx, my;
+    SDL_GetMouseState(&mx, &my);
+    SDL_Point mouse = {mx, my};
+
+    //se è sopra una delle voci, cambio il valore di hovered
+    if (SDL_PointInRect(&mouse, &restart_rect)){
+        hovered = 0;
+    } else if (SDL_PointInRect(&mouse, &quit_rect)){
+        hovered = 1;
+    } else {
+        hovered = -1; //se non è sopra niente allora torna neutro
+    }
+
+    //la voce è 'attiva' se sopra c'è il cursore oppure se è selezionato dalla tastiera
+    bool restart_active = (hovered == 0) || (hovered == -1 && selected == 0);
+    bool quit_active = (hovered == 1) || (hovered == -1 && selected == 1);
+
+    //disegno delle stringhe, con colori che dipendono dal fatto che il pulsante sia attivo o meno
+    draw_text(renderer, restart_active ? font2 : font1, "Ricomincia", box.x + 90, box.y + 145, restart_active? active : normal);
+    draw_text(renderer, quit_active ? font2 : font1, "Esci", box.x + 90, box.y + 195, quit_active? active : normal);
+}
+
 //questa funzione blocca il pezzo attuale e ne manda uno nuovo
 //controlla però che la prima riga non sia occupata o che il nuovo pezzo entri completamente
-//in caso contrario blocca la partita, mostra un messaggio e ne comincia una nuova
-void game_over(game_state* game, SDL_Window* window){
+//in caso contrario blocca la partita, imposta game_over_screen a true e ne comincia una nuova
+void game_over(game_state* game){
     lock_piece(game); //blocca prima il pezzo attuale
 
     if (top_row_occupied(game)){
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Game over", "pezzo fisso in prima riga, ricomincia", window);
-        init_game(game);
+        game->game_over_screen = true;
         return;
     }
     clear_lines(game);
@@ -373,12 +425,71 @@ void game_over(game_state* game, SDL_Window* window){
 
     //controlla che il nuovo pezzo entri
     if (!can_place(game, game->active_piece, game->active_x, game->active_y)){
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Game Over", "Non c'è spazio, ricomincia", window);
-        init_game(game);
+        game->game_over_screen = true;
         return;
     }
 }
 
+//disegna il pannello che appare quando viene completato un livello
+//separa quindi un livello dall'altro
+void draw_level_complete_box(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, game_state* game, int selected, int hovered){
+    SDL_Rect box = {SCREEN_WIDTH/2 -190, SCREEN_HEIGHT/2 - 300, 380, 320};
+    draw_hud_box(renderer, box);
+
+    SDL_Color title = {245, 245, 255, 255};
+    SDL_Color normal = {180, 210, 255, 255};
+    SDL_Color active = {255, 130, 220, 255};
+
+    char score_text[64];
+    char level_text[64];
+
+    draw_text(renderer, font2, "HAI VINTO!", box.x + 50, box.y + 28, title);
+    snprintf(level_text, sizeof(level_text), "LIVELLO %02d COMPLETATO", game->level - 1);
+    snprintf(score_text, sizeof(score_text), "Punteggio raggiunto: %d", game->score);
+
+    draw_text(renderer, font1, level_text, box.x + 50, box.y + 85, title);
+    draw_text(renderer, font1, score_text, box.x + 50, box.y + 110, normal);
+
+    SDL_Rect next_button = {box.x + 50, box.y + 155, 210, 50};
+    SDL_Rect restart_button = {box.x + 50, box.y + 210, 210, 50};
+    SDL_Rect quit_button = {box.x + 50, box.y + 265, 210, 50};
+
+    int mx, my;
+    SDL_GetMouseState(&mx, &my);
+    SDL_Point mouse = {mx, my};
+
+    //se è sopra una delle voci, cambio il valore di hovered
+    if (SDL_PointInRect(&mouse, &next_button)){
+        hovered = MENU_RESUME;
+    } else if (SDL_PointInRect(&mouse, &restart_button)){
+        hovered = MENU_RESTART;
+    } else if (SDL_PointInRect(&mouse, &quit_button)){
+        hovered = MENU_QUIT;
+    } else {
+        hovered = -1; //se non è sopra niente allora torna neutro
+    }
+
+    //la voce è 'attiva' se sopra c'è il cursore oppure se è selezionato dalla tastiera
+    bool next_level_active = (hovered == MENU_RESUME) || (hovered == -1 && selected== MENU_RESUME);
+    bool restart_active = (hovered == MENU_RESTART) || (hovered == -1 && selected == MENU_RESTART);
+    bool quit_active = (hovered == MENU_QUIT) || (hovered == -1 && selected == MENU_QUIT);
+
+    //disegno delle stringhe, con colori che dipendono dal fatto che il pulsante sia attivo o meno
+    draw_text(renderer, next_level_active ? font2 : font1, "Avanza", box.x + 90, box.y + 155, next_level_active? active : normal);
+    draw_text(renderer, restart_active ? font2 : font1, "Ricomincia", box.x + 90, box.y + 210, restart_active? active : normal);
+    draw_text(renderer, quit_active ? font2 : font1, "Esci", box.x + 90, box.y + 265, quit_active? active : normal);
+}
+
+//funzione che aumenta la velocità di caduta dei pezzi man mano che il livello aumenta
+int get_drop_interval_ms(const game_state* game){
+    int base = 1000;
+    int step = 80;
+    int min_interval = 180;
+    
+    int interval = base - (game->level - 1)* step;
+    if (interval < min_interval) interval = min_interval;
+    return interval;
+}
 
 int main(int argc, char* args[]){
     srand((unsigned int)time(NULL)); //serve a non generare sempre la stessa sequenza a ogni esecuzione
@@ -454,8 +565,7 @@ int main(int argc, char* args[]){
         while(SDL_PollEvent(&e) != 0){ //check per vedere se ci sono stati eventi
             if (e.type == SDL_QUIT){ //se l'evento è la 'X' per chiudere la finestra
                 quit = true;
-            } else if(e.type == SDL_KEYDOWN){
-                hovered = -1;
+            } else if(e.type == SDL_KEYDOWN){ //se l'evento è la pressione di qualche pulsante sulla tastiera
                 if (paused){ //se paused è true allora si trova nell'area menù
                     if (e.key.keysym.sym == SDLK_ESCAPE){ //se si preme esc allora si torna al gioco
                         paused = false;
@@ -491,8 +601,50 @@ int main(int argc, char* args[]){
                             quit = true;
                         }
                     }
-                } else { //caso in cui non si è in pausa, e si usa la tastiera
-                    if (e.key.keysym.sym == SDLK_ESCAPE){
+                } else if (game.game_over_screen){ //se la partita è stata persa
+                    if (e.key.keysym.sym == SDLK_UP || e.key.keysym.sym == SDLK_DOWN){
+                        if (menu_selected == -1) menu_selected = 0;
+                        else if (menu_selected == 0) menu_selected = 1;
+                        else if (menu_selected == 1) menu_selected = 0;
+                    } else if (e.key.keysym.sym == SDLK_RETURN || e.key.keysym.sym == SDLK_KP_ENTER){
+                        if (menu_selected == 0){
+                            init_game(&game);
+                            game.game_over_screen = false;
+                            menu_selected = -1;
+                            last_drop_time = SDL_GetTicks64();
+                        } else {
+                            quit = true;
+                        }
+                    } 
+                } else if (game.level_complete){
+                    if (e.key.keysym.sym == SDLK_UP){
+                        if (menu_selected == -1) menu_selected = MENU_RESUME; //se nessuna voce è selezionata parte da 'Avanza'
+                        else {
+                            menu_selected--;
+                            if (menu_selected < 0) menu_selected = MENU_ITEMS_COUNT - 1;
+                        }
+                    } else if (e.key.keysym.sym == SDLK_DOWN){ //se nessuna voce è selezionata allora si parte dal tasto 'Avanza'
+                        if (menu_selected == -1) menu_selected = MENU_RESUME;
+                        else {
+                            menu_selected++;
+                            if (menu_selected >= MENU_ITEMS_COUNT) menu_selected = 0;
+                        }
+                    } else if (e.key.keysym.sym == SDLK_RETURN || e.key.keysym.sym == SDLK_KP_ENTER){
+                        //è selezionata la voce 'Avanza' e quindi vado al prossimo livello
+                        if (menu_selected == MENU_RESUME){
+                            start_next_level(&game);
+                            last_drop_time = SDL_GetTicks64();
+                        } else if (menu_selected == MENU_RESTART){ //è selezionata la voce 'ricomincia'
+                            init_game(&game);
+                            menu_selected = -1;
+                            hovered = -1;
+                            last_drop_time = SDL_GetTicks64();
+                        } else if (menu_selected == MENU_QUIT){ //è selezionata la voce 'esci'
+                            quit = true;
+                        }
+                    } 
+                } else { //se è nella schermata di gioco
+                    if (e.key.keysym.sym == SDLK_ESCAPE){ //premendo esc si apre il menu
                         paused = true;
                         menu_selected = -1;
                         hovered = -1;
@@ -507,7 +659,7 @@ int main(int argc, char* args[]){
                         if (can_place(&game, game.active_piece, game.active_x, game.active_y + 1)){
                             game.active_y++;
                         } else { //se can_place è false, allora blocca il pezzo e ne fa uscire uno nuovo
-                            game_over(&game, window);
+                            game_over(&game);
                         }
                     } else if(e.key.keysym.sym == SDLK_UP){ //se viene premuta la freccia verso l'alto, il pezzo viene ruotato secondo la funzione rotate_piece
                         Piece rotated = rotate_piece(game.active_piece);
@@ -517,7 +669,35 @@ int main(int argc, char* args[]){
                 }
             } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT){ //se viene premuto il pulsante del mouse
                 SDL_Point click_point = {e.button.x, e.button.y}; //punto click del mouse
-                if (!paused){ //se non è nel menu
+                if (game.level_complete){ //se il livello è stato completato appare il pulsante 'AVANZA' che diventa disponibile
+                    SDL_Rect box = {SCREEN_WIDTH/2 -190, SCREEN_HEIGHT/2 - 300, 380, 320};
+                    SDL_Rect next_button = {box.x + 85, box.y + 155, 210, 50};
+                    SDL_Rect reset_button = {box.x + 85, box.y + 210, 210, 50};
+                    SDL_Rect quit_button = {box.x + 85, box.y + 265, 210, 50};
+                    if (SDL_PointInRect(&click_point, &next_button)){
+                        start_next_level(&game);
+                        last_drop_time = SDL_GetTicks64();
+                    } else if(SDL_PointInRect(&click_point, &reset_button)){
+                        init_game(&game);
+                        menu_selected = -1;
+                        hovered = -1;
+                        last_drop_time = SDL_GetTicks64();
+                    }else if (SDL_PointInRect(&click_point, &quit_button)){
+                        quit = true;
+                    }
+                } else if (game.game_over_screen){ //se la partita è stata persa
+                    SDL_Rect box = {SCREEN_WIDTH/2 -170, SCREEN_HEIGHT/2 - 140, 360, 280};
+                    SDL_Rect restart_rect = {box.x + 50, box.y + 140, 250, 50};
+                    SDL_Rect quit_rect = {box.x + 50, box.y + 190, 250, 50};
+
+                    if (SDL_PointInRect(&click_point, &restart_rect)){
+                        init_game(&game);
+                        game.game_over_screen = false;
+                        last_drop_time = SDL_GetTicks64();
+                    } else if (SDL_PointInRect(&click_point, &quit_rect)){
+                        quit = true;
+                    }
+                } else if (!paused){ //se non è nel menu
                     if (SDL_PointInRect(&click_point, &pause_box)){ //se il click è nel rettangolo di pausa
                         paused = true; //apre il menu
                         menu_selected = -1; 
@@ -549,12 +729,12 @@ int main(int argc, char* args[]){
         }
         Uint64 current_time = SDL_GetTicks64();
 
-        //se il gioco non è in pausa e il tempo è scaduto, il pezzo prova a scendere
-        if (!paused && current_time - last_drop_time >= DROP_INTERVAL){
+        //se il gioco non è in pausa/il livello non è finito e il tempo è scaduto, il pezzo prova a scendere
+        if (!paused && !game.level_complete && !game.game_over_screen && current_time - last_drop_time >= get_drop_interval_ms(&game)){
             if (can_place(&game, game.active_piece, game.active_x, game.active_y + 1)){
                 game.active_y++;
             } else {  //se can_place è false, allora blocca il pezzo e ne fa uscire uno nuovo
-                game_over(&game, window);
+                game_over(&game);
             }
             last_drop_time = current_time;
         }
@@ -589,9 +769,14 @@ int main(int argc, char* args[]){
 
         draw_pause_button(renderer, font1, pause_box, clicked); //disegna il pulsante
 
-        //se il menu è aperto, allora lo disegno
-        if (paused){
+        //se il livello è stato completato allora disegno il box per avanzare di livello
+        if (game.level_complete){
+            draw_level_complete_box(renderer, font1, font2, &game, menu_selected, hovered);
+        } else if (paused){ //se viene cliccato il pulsante di pausa/menu
             draw_pause_menu(renderer, font1, font2, menu_selected, hovered); //disegna il menu solo se è in pausa
+        } //se il livello è stato perso allora disegno il pannello di game_over
+        else if (game.game_over_screen){
+            draw_game_over(renderer, font1, font2, menu_selected, hovered);
         }
 
         SDL_RenderPresent(renderer); //mostra il risultato
