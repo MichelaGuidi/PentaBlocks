@@ -13,7 +13,7 @@ CFLAGS = -std=c17 -Wall -Wextra -g -I./include $(shell pkg-config --cflags sdl2 
 LDLIBS = $(shell pkg-config --libs sdl2 SDL2_ttf SDL2_image)
 
 #file sorgenti
-SRCS = src/main.c src/game.c
+SRCS = src/main.c src/game.c src/render.c 
 
 #file oggetto creati dopo la compilazione
 OBJS = $(SRCS:.c=.o)
@@ -26,7 +26,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDLIBS)
 
 #regola per compilare i file sorgenti
-src/%.o: src/%.c include/game.h
+src/%.o: src/%.c include/game.h include/render.h include/config.h 
 	$(CC) $(CFLAGS) -c $< -o $@
 
 #crea la directory bin se non esiste

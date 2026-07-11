@@ -160,7 +160,7 @@ void clear_lines(game_state* game){
             i++; //incremento per controllora di nuovo la riga attuale, dato che nel for viene fatto i--
         }
     }
-    //aumenta il punteggio, ancora non utilizzato
+    //aumenta il punteggio
     game->score += c*100;
     game->lines_cleared += c;
     update_level(game);
@@ -191,4 +191,36 @@ void start_next_level(game_state* game){
     game->lines_cleared = 0;
     game->level_complete = false;
     spawn_piece(game);
+}
+
+
+//questa funzione blocca il pezzo attuale e ne manda uno nuovo
+//controlla però che la prima riga non sia occupata o che il nuovo pezzo entri completamente
+//in caso contrario blocca la partita, imposta game_over_screen a true e ne comincia una nuova
+void game_over(game_state* game){
+    lock_piece(game); //blocca prima il pezzo attuale
+
+    if (top_row_occupied(game)){
+        game->game_over_screen = true;
+        return;
+    }
+    clear_lines(game);
+    spawn_piece(game);
+
+    //controlla che il nuovo pezzo entri
+    if (!can_place(game, game->active_piece, game->active_x, game->active_y)){
+        game->game_over_screen = true;
+        return;
+    }
+}
+
+//funzione che aumenta la velocità di caduta dei pezzi man mano che il livello aumenta
+int get_drop_interval_ms(const game_state* game){
+    int base = 1000;
+    int step = 80;
+    int min_interval = 180;
+    
+    int interval = base - (game->level - 1)* step;
+    if (interval < min_interval) interval = min_interval;
+    return interval;
 }
