@@ -193,11 +193,24 @@ void draw_block_3d(SDL_Renderer* renderer, SDL_Rect rect, uint8_t color_id, int 
     SDL_SetRenderDrawColor(renderer, lighter(r), lighter(g), lighter(b), 120);
     SDL_RenderDrawRect(renderer, &inner);
 
-    // evidenziazione pezzo attivo
+    //evidenziazione pezzo attivo
     if (active) {
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 120);
-        SDL_Rect glow = { rect.x - 1, rect.y - 1, rect.w + 2, rect.h + 2 };
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+        //alone esterno che dipende dal colore del pezzo
+        SDL_SetRenderDrawColor(renderer, lighter(r), lighter(g), lighter(b), 45);
+        SDL_Rect glow = {rect.x - 3, rect.y - 3, rect.w + 6, rect.h + 6};
         SDL_RenderDrawRect(renderer, &glow);
+
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 70);
+        SDL_Rect glow_mid = {rect.x - 1, rect.y - 1, rect.w + 2, rect.h + 2};
+        SDL_RenderDrawRect(renderer, &glow_mid);
+
+        //bordo brillante del blocco
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 120);
+        SDL_RenderDrawRect(renderer, &rect);
+
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
     }
 }
 
@@ -235,7 +248,7 @@ void draw_active_piece(SDL_Renderer* renderer, game_state* game){
         rect.w = T_SIZE;
         rect.h = T_SIZE;
 
-        draw_block_3d(renderer, rect, game->active_piece.color_id, 0);
+        draw_block_3d(renderer, rect, game->active_piece.color_id, 1);
         
     }
 }
@@ -430,4 +443,81 @@ void draw_level_complete_box(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* 
     draw_text(renderer, next_level_active ? font2 : font1, "Avanza", box.x + 90, box.y + 155, next_level_active? active : normal);
     draw_text(renderer, restart_active ? font2 : font1, "Ricomincia", box.x + 90, box.y + 210, restart_active? active : normal);
     draw_text(renderer, quit_active ? font2 : font1, "Esci", box.x + 90, box.y + 265, quit_active? active : normal);
+}
+
+//funzione che disegna un flash quando una o più righe vengono completate
+void draw_line_clear_flash(SDL_Renderer* renderer, game_state* game){
+    if (game->flash_timer_ms <= 0){ //se dopo l'esecuzione di clear_lines, questo resta a 0, significa che nessuna riga è stata completata
+        return;
+    }
+    //attiva il blending per permettere al flash di essere semitrasparente
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    //calcola la trasparenza del flash in base al tempo che resta
+    int alpha_outer = (game->flash_timer_ms* 180)/180;
+    int alpha_inner = (game->flash_timer_ms*255)/180;
+
+    //mantiene i valori in un intervallo valido
+    if (alpha_outer > 180) alpha_outer = 180;
+    if (alpha_outer < 0) alpha_outer = 0;
+    if (alpha_inner > 255) alpha_inner = 255;
+    if (alpha_inner < 0) alpha_inner = 0;
+
+    //alone esterno del flash
+    SDL_Rect glow = {BOARD_OFFSET_X - 18, BOARD_OFFSET_Y - 18, COLS*T_SIZE + 36, ROWS*T_SIZE + 36};
+    //bordo esterno della board
+    SDL_Rect outer = {BOARD_OFFSET_X - 10, BOARD_OFFSET_Y - 10, COLS*T_SIZE + 20, ROWS*T_SIZE + 20};
+    //bordo interno della board
+    SDL_Rect inner = {BOARD_OFFSET_X - 4, BOARD_OFFSET_Y - 4, COLS* T_SIZE + 8, ROWS*T_SIZE + 8};
+
+    SDL_SetRenderDrawColor(renderer, 120, 240, 255, (Uint8)(alpha_outer/3));
+    SDL_RenderFillRect(renderer, &glow);
+    SDL_SetRenderDrawColor(renderer, 180, 255, 255, (Uint8)alpha_outer);
+    SDL_RenderDrawRect(renderer, &outer);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, (Uint8)alpha_inner);
+    SDL_RenderDrawRect(renderer, &inner);
+
+    //ripristina il blend mode normale
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+}
+
+//funzione che disegna la sagoma trasparente del pezzo attivo nel punto più basso in cui può arrivere senza collisioni
+void draw_ghost_piece(SDL_Renderer* renderer, game_state* game){
+    int ghost_y = game->active_y;
+
+    //scende fino al punto in cui la posizione è bassa
+    while(can_place(game, game->active_piece, game->active_x, ghost_y +1)){
+        ghost_y++;
+    }
+
+    if (ghost_y == game->active_y){ //se coincide con il pezzo attivo non deve disegnarlo
+        return;
+    }
+
+    Uint8 r, g, b;
+    get_piece_rgb(game->active_piece.color_id, &r, &g, &b);
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND); //effetto semitrasparente
+
+    for (int i = 0; i < BLOCKS_PER_PIECE; i++){
+        SDL_Rect rect;
+
+        rect.x = BOARD_OFFSET_X + (game->active_x + game->active_piece.shape[i].dx)*T_SIZE;
+        rect.y = BOARD_OFFSET_Y + (ghost_y + game->active_piece.shape[i].dy)*T_SIZE;
+
+        rect.w = T_SIZE;
+        rect.h = T_SIZE;
+
+        SDL_SetRenderDrawColor(renderer, r, g, b, 45); //riempimento leggero della sagoma
+        SDL_RenderFillRect(renderer, &rect);
+
+        SDL_SetRenderDrawColor(renderer, lighter(r), lighter(g), lighter(b), 110);
+        SDL_RenderDrawRect(renderer, &rect);
+
+        SDL_Rect inner = {rect.x + 2, rect.y + 2, rect.w -4, rect.h - 4};
+        SDL_SetRenderDrawColor(renderer, lighter(r), lighter(g), lighter(b), 70);
+        SDL_RenderDrawRect(renderer, &inner);
+    }
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 }

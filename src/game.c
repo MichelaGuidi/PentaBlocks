@@ -41,6 +41,8 @@ void init_game(game_state *game){
 
     game->game_over_screen = false;
 
+    game->flash_timer_ms = 0;
+
     //appena la partita comincia abbiamo un pezzo casuale nella griglia e uno a lato
     game->active_piece = random_piece();
     game->next_piece = random_piece();
@@ -130,6 +132,7 @@ bool top_row_occupied(game_state* game){
 //la funzione pulisce le righe piene e fa scendere le righe più in alto
 void clear_lines(game_state* game){
     int c = 0;
+
     //a partire dall'ultima riga controlla se ce n'è almeno una completamente piena
     for (int i = ROWS - 1; i >= 0; i--){
         bool full = true; //parte da piena
@@ -160,6 +163,11 @@ void clear_lines(game_state* game){
             i++; //incremento per controllora di nuovo la riga attuale, dato che nel for viene fatto i--
         }
     }
+
+    if (c > 0){
+        game->flash_timer_ms = 180; //se c'è almeno una riga piena, allora cambio il valore del timer
+    }
+
     //aumenta il punteggio
     game->score += c*100;
     game->lines_cleared += c;

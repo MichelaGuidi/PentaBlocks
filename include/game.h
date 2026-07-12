@@ -35,6 +35,8 @@ typedef struct{
 
     bool game_over_screen; //true se partita persa
 
+    int flash_timer_ms; //campo per controllare il flash quando una riga è piena
+
     Piece active_piece; //definiamo il pezzo che deve muoversi
     int active_x; // colonna in cui si trova (l'inizio)
     int active_y; // riga in cui si trova (l'inizio)

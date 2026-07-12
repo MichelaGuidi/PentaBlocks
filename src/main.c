@@ -78,10 +78,21 @@ int main(int argc, char* args[]){
     SDL_Rect pause_box = {SCREEN_WIDTH - 140, SCREEN_HEIGHT -80, 70, 50}; //riquadro che contiene il pulsante menu (pausa)
 
     Uint64 last_drop_time = SDL_GetTicks64();
+    Uint64 last_frame_time = SDL_GetTicks64(); //calcola quanto tempo passa tra un frame e il successivo
 
 
     while(!quit){
         Uint64 frame_start = SDL_GetTicks64();
+        Uint64 now = SDL_GetTicks64(); //tempo attuale
+        int delta_ms = (int)(now - last_frame_time); //millisecondi passati
+        last_frame_time = now;
+
+        if (game.flash_timer_ms > 0){ //se il flash è attivo, ne diminuisce gradualmente la durata residua
+            game.flash_timer_ms -= delta_ms;
+            if (game.flash_timer_ms < 0){ //evita che vada sotto lo 0
+                game.flash_timer_ms = 0;
+            }
+        }
 
         while(SDL_PollEvent(&e) != 0){ //check per vedere se ci sono stati eventi
             if (e.type == SDL_QUIT){ //se l'evento è la 'X' per chiudere la finestra
@@ -274,6 +285,8 @@ int main(int argc, char* args[]){
         //disegno dell'interfaccia, chiamando in ordine tutte le funzioni
         draw_board_frame(renderer);
         draw_board(renderer, &game);
+        draw_ghost_piece(renderer, &game);
+        draw_line_clear_flash(renderer, &game);
         draw_active_piece(renderer, &game);
         draw_sidebar(renderer);
         draw_next_panel(renderer, font1);
