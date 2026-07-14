@@ -111,10 +111,6 @@ void draw_board_frame(SDL_Renderer* renderer){
     //bordo interno viola
     SDL_SetRenderDrawColor(renderer, 150, 80, 220, 110);
     SDL_RenderDrawRect(renderer, &inner);
-
-    SDL_Rect base_glow ={ BOARD_OFFSET_X - 6, BOARD_OFFSET_Y + ROWS*T_SIZE +6, COLS* T_SIZE+12, 8};
-    SDL_SetRenderDrawColor(renderer, 120, 50, 220, 70);
-    SDL_RenderFillRect(renderer, &base_glow);
 }
 
 //funzione che disegna il pulsante del menu
@@ -129,7 +125,7 @@ void draw_pause_button(SDL_Renderer* renderer, TTF_Font* font1, SDL_Rect rect, b
     }
 
     //scrivo ESC sopra per indicare che si può aprire premento ESC dalla tastiera
-    draw_text(renderer, font1, "ESC", SCREEN_WIDTH -130, SCREEN_HEIGHT -70, pause_button_color);
+    draw_text(renderer, font1, "ESC", SCREEN_WIDTH -110, SCREEN_HEIGHT -70, pause_button_color);
 }
 
 //disegna due box a destra della board (modificata rispetto a prima perché aveva solo un riquadro)
@@ -292,9 +288,45 @@ void draw_next_piece(SDL_Renderer* renderer, game_state* game){
     }
 }
 
+//funzione che comincia la partita
+void draw_first_box(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, int selected, int hovered){
+    SDL_Rect box = {10, SCREEN_HEIGHT/2 - 140, 380, 280};
+    draw_hud_box(renderer, box);
+
+    SDL_Color title = {245, 245, 255, 255};
+    SDL_Color normal = {180, 210, 255, 255};
+    SDL_Color active = {255, 130, 220, 255};
+
+    draw_text(renderer, font2, "INIZIA!", box.x + 90, box.y + 28, title);
+
+    SDL_Rect init_button = {box.x + 50, box.y + 110, 210, 50};
+    SDL_Rect quit_button = {box.x + 50, box.y + 160, 210, 50};
+
+    int mx, my;
+    SDL_GetMouseState(&mx, &my);
+    SDL_Point mouse = {mx, my};
+
+    //se è sopra una delle voci, cambio il valore di hovered
+    if (SDL_PointInRect(&mouse, &init_button)){
+        hovered = 0;
+    } else if (SDL_PointInRect(&mouse, &quit_button)){
+        hovered = 1;
+    } else {
+        hovered = -1; //se non è sopra niente allora torna neutro
+    }
+
+    //la voce è 'attiva' se sopra c'è il cursore oppure se è selezionato dalla tastiera
+    bool init_active = (hovered == 0) || (hovered == -1 && selected == 0);
+    bool quit_active = (hovered == 1) || (hovered == -1 && selected == 1);
+
+    //disegno delle stringhe, con colori che dipendono dal fatto che il pulsante sia attivo o meno
+    draw_text(renderer, init_active ? font2 : font1, "Inizia", box.x + 90, box.y + 110, init_active? active : normal);
+    draw_text(renderer, quit_active ? font2 : font1, "Esci", box.x + 90, box.y + 160, quit_active? active : normal);
+}
+
 //funzione che disdegna il menu
 void draw_pause_menu(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, int selected, int hovered){
-    SDL_Rect box = {SCREEN_WIDTH/2 -170, SCREEN_HEIGHT/2 - 140, 360, 280}; //box che contiene il menu
+    SDL_Rect box = {SCREEN_WIDTH/2 -170, SCREEN_HEIGHT/2 - 140, 380, 320}; //box che contiene il menu
     SDL_SetRenderDrawColor(renderer, 10, 16, 40, 240);
     SDL_RenderFillRect(renderer, &box);
 
@@ -312,7 +344,7 @@ void draw_pause_menu(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, i
     SDL_Color normal = {180, 210, 255, 255};
     SDL_Color active = {255, 130, 220, 255};
 
-    draw_text(renderer, font2, "PAUSA", box.x + 95, box.y + 28, title);
+    draw_text(renderer, font2, "PAUSA", box.x + 90, box.y + 28, title);
 
     //rettangoli cliccabili, necessari per capire se il cursore è sopra
     SDL_Rect resume_rect = {box.x + 70, box.y + 90, 200, 50};
@@ -348,7 +380,7 @@ void draw_pause_menu(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, i
 
 //funzione che disegna il pannello di game_over (simile a quello di menu)
 void draw_game_over(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, int selected, int hovered){
-    SDL_Rect box = {SCREEN_WIDTH/2 -170, SCREEN_HEIGHT/2 - 140, 360, 280}; //box che contiene il menu
+    SDL_Rect box = {SCREEN_WIDTH/2 -170, SCREEN_HEIGHT/2 - 140, 380, 280}; //box che contiene il menu
     SDL_SetRenderDrawColor(renderer, 10, 16, 40, 240);
     SDL_RenderFillRect(renderer, &box);
 
@@ -369,8 +401,8 @@ void draw_game_over(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, in
     draw_text(renderer, font2, "HAI PERSO!", box.x + 50, box.y + 28, title);
 
     //rettangoli cliccabili, necessari per capire se il cursore è sopra
-    SDL_Rect restart_rect = {box.x + 50, box.y + 140, 200, 50}; 
-    SDL_Rect quit_rect = {box.x + 50, box.y + 190, 200, 50};
+    SDL_Rect restart_rect = {box.x + 50, box.y + 110, 200, 50}; 
+    SDL_Rect quit_rect = {box.x + 50, box.y + 160, 200, 50};
 
     //posizione attuale del mouse
     int mx, my;
@@ -391,14 +423,14 @@ void draw_game_over(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, in
     bool quit_active = (hovered == 1) || (hovered == -1 && selected == 1);
 
     //disegno delle stringhe, con colori che dipendono dal fatto che il pulsante sia attivo o meno
-    draw_text(renderer, restart_active ? font2 : font1, "Ricomincia", box.x + 90, box.y + 145, restart_active? active : normal);
-    draw_text(renderer, quit_active ? font2 : font1, "Esci", box.x + 90, box.y + 195, quit_active? active : normal);
+    draw_text(renderer, restart_active ? font2 : font1, "Ricomincia", box.x + 90, box.y + 110, restart_active? active : normal);
+    draw_text(renderer, quit_active ? font2 : font1, "Esci", box.x + 90, box.y + 160, quit_active? active : normal);
 }
 
 //disegna il pannello che appare quando viene completato un livello
 //separa quindi un livello dall'altro
 void draw_level_complete_box(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, game_state* game, int selected, int hovered){
-    SDL_Rect box = {SCREEN_WIDTH/2 -190, SCREEN_HEIGHT/2 - 300, 380, 320};
+    SDL_Rect box = {SCREEN_WIDTH/2 -170, SCREEN_HEIGHT/2 - 140, 380, 320};
     draw_hud_box(renderer, box);
 
     SDL_Color title = {245, 245, 255, 255};
@@ -520,4 +552,47 @@ void draw_ghost_piece(SDL_Renderer* renderer, game_state* game){
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+}
+
+//disegna pannello con i comandi
+void draw_controls_box(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2){
+    SDL_Rect box = {SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 - 140, 380, 280}; //alla destra del pannello 'inizia'
+    draw_hud_box(renderer, box); //diesegnato come gli altri
+
+    SDL_Color title = {245, 245, 255, 255};
+    SDL_Color key = {255, 130, 220, 255};
+    SDL_Color text = {180, 210, 255, 255};
+
+    draw_text(renderer, font2, "COMANDI", box.x + 65, box.y + 18, title);
+
+    //comandi
+    draw_text(renderer, font1, "[<-][->]", box.x + 30, box.y + 80, key);
+    draw_text(renderer, font1, "SPOSTA", box.x + 180, box.y + 80, text);
+
+    draw_text(renderer, font1, "[UP]", box.x + 30, box.y + 130, key);
+    draw_text(renderer, font1, "RUOTA", box.x + 180, box.y + 130, text);
+
+    draw_text(renderer, font1, "[DOWN]", box.x + 30, box.y + 180, key);
+    draw_text(renderer, font1, "SCENDI", box.x + 180, box.y + 180, text);
+
+    draw_text(renderer, font1, "[ESC]", box.x + 30, box.y + 230, key);
+    draw_text(renderer, font1, "MENU", box.x + 180, box.y + 230, text);
+}
+
+//funzione che scrive la soglia per superare il livello
+void draw_min_level_score(SDL_Renderer* renderer, TTF_Font* font1, game_state* game){
+    SDL_Rect rect = {SIDEBAR_X, SCREEN_HEIGHT - 80, SIDEBAR_W - 70, 50};
+    draw_hud_box(renderer, rect);
+
+    SDL_Color text = {180, 210, 255, 255};
+
+    char min_score[12];
+    char level[12];
+    snprintf(min_score, sizeof(min_score), "%d", game->next_level_score);
+    snprintf(level, sizeof(level), "%d", game->level);
+
+    draw_text(renderer, font1, "Obiettivo lvl.", rect.x + 10, rect.y + 15, text);
+    draw_text(renderer, font1, level, rect.x + 145, rect.y + 15, text);
+    draw_text(renderer, font1, ":", rect.x + 160, rect.y + 15, text);
+    draw_text(renderer, font1, min_score, rect.x + 180, rect.y + 15, text);
 }

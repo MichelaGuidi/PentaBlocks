@@ -29,5 +29,8 @@ void draw_game_over(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, in
 void draw_level_complete_box(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, game_state* game, int selected, int hovered);
 void draw_line_clear_flash(SDL_Renderer* renderer, game_state* game);
 void draw_ghost_piece(SDL_Renderer* renderer, game_state* game);
+void draw_first_box(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2, int selected, int hovered);
+void draw_controls_box(SDL_Renderer* renderer, TTF_Font* font1, TTF_Font* font2);
+void draw_min_level_score(SDL_Renderer* renderer, TTF_Font* font1, game_state* game);
 
 #endif
